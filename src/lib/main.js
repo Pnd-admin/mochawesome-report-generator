@@ -36,6 +36,12 @@ function saveFile(filename, data, overwrite) {
   });
 }
 
+function invokeCallback(cbFn, data) {
+  return new Promise((resolve, reject) => {
+    cbFn(data, err => (err === null ? resolve("Data pushed to callback") : reject(err)));
+  });
+}
+
 /**
  * Opens a file
  *
@@ -152,6 +158,7 @@ function getOptions(opts, reportData) {
   }
 
   mergedOptions.htmlFile = `${filename}.html`;
+  mergedOptions.callBackFn = opts.callBackFn;
   return mergedOptions;
 }
 
@@ -297,6 +304,7 @@ function create(data, opts) {
     overwrite,
     jsonFile,
     htmlFile,
+    callBackFn
   } = reportOptions;
 
   const savePromises = [];
@@ -319,6 +327,9 @@ function create(data, opts) {
         )
       : null
   );
+  savePromises.push(
+      callBackFn ? invokeCallback(callBackFn, JSON.stringify(data, (k, v) => (v === undefined ? null : v), 2)) : null
+  )
 
   return Promise.all(savePromises);
 }
